@@ -1,3 +1,4 @@
+import os
 import pickle as pkl
 
 import matplotlib as mpl
@@ -54,20 +55,34 @@ def newton(f, jacob, x):
 
 
 if __name__ == '__main__':
+    if not os.path.isfile('generated_traj.dat'):
+        Niter = 100000
+        delta_t = 1e-2
+        ROSSLER_MAP = RosslerMap(delta_t=delta_t)
+        INIT = np.array([-5.75, -1.6,  0.02])
+        traj, t = ROSSLER_MAP.full_traj(Niter, INIT)
+        torch.save(torch.Tensor(traj), 'generated_traj.dat')
 
-    Niter = 100000
-    delta_t = 1e-2
-    ROSSLER_MAP = RosslerMap(delta_t=delta_t)
-    INIT = np.array([-5.75, -1.6,  0.02])
-    traj, t = ROSSLER_MAP.full_traj(Niter, INIT)
+    else:
+        traj = torch.load('generated_traj.dat')
+        Niter = 100000
+        delta_t = 1e-2
+        t = np.linspace(0, Niter * delta_t, Niter)
+    traj = traj[:10000]
+    traj = traj[[False if i % 8 else True for i in range(len(traj))]]
 
     traj2 = torch.load('traj.dat')
-    print(traj2.shape)
+    print('traj2', traj2.shape, 'traj', traj.shape)
+
+    traj2 = traj2[:100000]
+
+    traj2 = traj2[[False if i % 8 else True for i in range(len(traj2))]]
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2])
-    ax.plot(traj2[:, 0], traj2[:, 1], traj2[:, 2])
+    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], 'g')
+    ax.plot(traj2[:, 0], traj2[:, 1], traj2[:, 2], 'r')
 
+    '''
     fix_point = newton(ROSSLER_MAP.v_eq, ROSSLER_MAP.jacobian, INIT)
     with open('traj.pkl', 'wb') as fp:
         pkl.dump(traj, fp)
@@ -77,4 +92,5 @@ if __name__ == '__main__':
     lyap = lyapunov_exponent(traj, ROSSLER_MAP.jacobian,
                              max_it=Niter, delta_t=delta_t)
     print("Lyapunov Exponents :", lyap, "with delta t =", delta_t)
+    '''
     plt.show()

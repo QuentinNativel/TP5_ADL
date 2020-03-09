@@ -23,7 +23,7 @@ class Rossler_model:
     def __init__(self, delta_t):
         self.delta_t = delta_t  # if discrete model your delta_t
         # if continuous model chose one <=1e-2
-        self.nb_steps = 1000//self.delta_t
+        self.nb_steps = 5300//self.delta_t
 
         self.rosler_nn = Model()
         self.rosler_nn.load_state_dict(torch.load('model.pt'))
