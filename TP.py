@@ -4,6 +4,7 @@ import pickle as pkl
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm, qr, solve
@@ -55,42 +56,57 @@ def newton(f, jacob, x):
 
 
 if __name__ == '__main__':
+    Niter = 100000
+    delta_t = 1e-2
+    ROSSLER_MAP = RosslerMap(delta_t=delta_t)
+    INIT = np.array([-5.75, -1.6,  0.02])
     if not os.path.isfile('generated_traj.dat'):
-        Niter = 100000
-        delta_t = 1e-2
-        ROSSLER_MAP = RosslerMap(delta_t=delta_t)
-        INIT = np.array([-5.75, -1.6,  0.02])
+
         traj, t = ROSSLER_MAP.full_traj(Niter, INIT)
         torch.save(torch.Tensor(traj), 'generated_traj.dat')
 
     else:
         traj = torch.load('generated_traj.dat')
-        Niter = 100000
-        delta_t = 1e-2
         t = np.linspace(0, Niter * delta_t, Niter)
-    traj = traj[:10000]
-    traj = traj[[False if i % 8 else True for i in range(len(traj))]]
+    traj_to_plot = traj[:10000]
+    traj_to_plot = traj_to_plot[[False if i %
+                                 8 else True for i in range(len(traj_to_plot))]]
 
     traj2 = torch.load('traj.dat')
     print('traj2', traj2.shape, 'traj', traj.shape)
 
-    traj2 = traj2[:100000]
+    traj2_to_plot = traj2[:100000]
 
-    traj2 = traj2[[False if i % 8 else True for i in range(len(traj2))]]
+    traj2_to_plot = traj2_to_plot[[False if i %
+                                   8 else True for i in range(len(traj2_to_plot))]]
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], 'g')
-    ax.plot(traj2[:, 0], traj2[:, 1], traj2[:, 2], 'r')
+    ax.plot(traj_to_plot[:, 0], traj_to_plot[:, 1], traj_to_plot[:, 2], 'g')
+    ax.plot(traj2_to_plot[:, 0], traj2_to_plot[:, 1], traj2_to_plot[:, 2], 'r')
 
-    '''
-    fix_point = newton(ROSSLER_MAP.v_eq, ROSSLER_MAP.jacobian, INIT)
+    # fix_point = newton(ROSSLER_MAP.v_eq, ROSSLER_MAP.jacobian, INIT)
     with open('traj.pkl', 'wb') as fp:
         pkl.dump(traj, fp)
-    error = norm(fix_point-ROSSLER_MAP.equilibrium())
-    print("equilibrium state :", fix_point, ", error : ", error)
+    # error = norm(fix_point-ROSSLER_MAP.equilibrium())
+    # print("equilibrium state :", fix_point, ", error : ", error)
 
-    lyap = lyapunov_exponent(traj, ROSSLER_MAP.jacobian,
-                             max_it=Niter, delta_t=delta_t)
-    print("Lyapunov Exponents :", lyap, "with delta t =", delta_t)
-    '''
+    # lyap = lyapunov_exponent(traj, ROSSLER_MAP.jacobian,
+    #                          max_it=Niter, delta_t=delta_t)
+
+    # print("Lyapunov Exponents :", lyap, "with delta t =", delta_t)
+
+    plt.show()
+    fig, ax = plt.subplots()
+    m = min(len(traj), len(traj2))
+    data = {
+        'traj': traj[:m, 0],
+        'traj2': traj2[:m, 0]
+    }
+    data = pd.DataFrame.from_dict(data)
+    data.plot.kde(ax=ax, legend=False, title='Histogram: A vs. B')
+    data.plot.hist(density=True, ax=ax)
+    data.plot.hist(density=True, ax=ax)
+    ax.set_ylabel('Probability')
+    ax.grid(axis='y')
+    ax.set_facecolor('#d8dcd6')
     plt.show()

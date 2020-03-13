@@ -12,11 +12,13 @@ class Model(nn.Module):
 
         self.l1 = nn.Linear(3, 10)
         self.relu = nn.ReLU()
-        self.l2 = nn.Linear(10, 3)
+        self.l2 = nn.Linear(10, 10)
+        self.l3 = nn.Linear(10, 3)
 
     def forward(self, inputs):
         o1 = self.relu(self.l1(inputs))
-        return self.l2(o1)
+        o2 = self.relu(self.l2(o1))
+        return self.l3(o2)
 
 
 class Rossler_model:
