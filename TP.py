@@ -12,6 +12,8 @@ from scipy.linalg import expm
 
 from rossler_map import RosslerMap
 
+from TP5_ADL.statistics import time_correlation, get_frequencies
+
 
 def lyapunov_exponent(traj, jacobian, max_it=1000, delta_t=1e-3):
 
@@ -87,13 +89,6 @@ if __name__ == '__main__':
     # fix_point = newton(ROSSLER_MAP.v_eq, ROSSLER_MAP.jacobian, INIT)
     with open('traj.pkl', 'wb') as fp:
         pkl.dump(traj, fp)
-    # error = norm(fix_point-ROSSLER_MAP.equilibrium())
-    # print("equilibrium state :", fix_point, ", error : ", error)
-
-    # lyap = lyapunov_exponent(traj, ROSSLER_MAP.jacobian,
-    #                          max_it=Niter, delta_t=delta_t)
-
-    # print("Lyapunov Exponents :", lyap, "with delta t =", delta_t)
 
     plt.show()
     fig, ax = plt.subplots()
@@ -109,4 +104,23 @@ if __name__ == '__main__':
     ax.set_ylabel('Probability')
     ax.grid(axis='y')
     ax.set_facecolor('#d8dcd6')
+    plt.show()
+
+    time_correlation(10000, traj, traj2)
+
+    k=20
+    traj = traj[0:1000]
+    traj2 = traj2[0:1000]
+    time = range(len(traj))
+    traj_freq = get_frequencies(traj)
+    pred_freq = get_frequencies(traj2)
+    traj_top = np.argsort(traj_freq)[-k:]
+    pred_top = np.argsort(pred_freq)[-k:]
+
+    plt.plot(time[:len(traj_freq) // 2], traj_freq[:len(traj_freq) // 2],label="real trajectory")
+    plt.plot(time[:len(pred_freq) // 2], pred_freq[:len(pred_freq) // 2],label="predicted trajectory")
+    plt.ylabel("Amplitude")
+    plt.xlabel("Frequency")
+    plt.legend()
+    plt.title("Frequencies for the time range [0,1000] ")
     plt.show()
